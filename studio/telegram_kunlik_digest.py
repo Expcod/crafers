@@ -2,21 +2,24 @@
 # =====================================================================
 #  TALAB #8 — Egaga har kuni ertalab Telegram digest
 #
-#  BU FAYL MODUL EMAS. Bu Odoo Studio ning "Rejalashtirilgan
-#  avtomatizatsiya" (Scheduled Action) kod maydoniga qo'yiladigan matn.
+#  BU FAYL MODUL EMAS. Bu Odoo ning Scheduled Action (ir.cron) "Python
+#  Code" maydoniga qo'yiladigan matn. Studio shart emas - ir.cron `base`
+#  modulining qismi.
 #  Repoda versiyalanishi va ko'rib chiqilishi uchun saqlanadi.
 #
 #  O'RNATISH
 #  ---------
-#  1. Ilovalar -> "Studio" va "Automation Rules" ni o'rnating.
-#  2. Sozlamalar -> Texnik -> Rejalashtirilgan amallar -> Yangi:
+#  1. "Telegram Notification Center" (telegram_notification) ni o'rnating,
+#     Settings da bot token va chat ID ni kiriting, "Enable" ni yoqing.
+#  2. Settings -> Technical -> Automation -> Scheduled Actions -> New:
 #         Nomi         : Telegram - egaga kunlik digest
 #         Model        : Kompaniya (res.company)
 #         Interval     : 1 kun
 #         Keyingi ijro : ertaga 08:00 (Asia/Tashkent)
 #     Kod maydoniga shu fayldagi kodni qo'ying.
-#  3. Sozlamalar -> Texnik -> Tizim parametrlari (ir.config_parameter):
-#         crafers.telegram_chat_id = <egasi yoki guruh chat ID si>
+#  3. Alohida parametr kerak emas: token va chat ID appning o'z
+#     sozlamalaridan olinadi (tnc.telegram_bot_token / tnc.telegram_chat_id).
+#     "Run Manually" bilan sinab ko'ring.
 #
 #  NEGA STUDIO YOLG'IZ YETMAYDI
 #  -----------------------------
@@ -66,6 +69,12 @@ def pul(summa):
     return ('-' if manfiy else '') + ' '.join(bolaklar)
 
 
+def esc(matn):
+    """Telegram parse_mode=HTML uchun. Mijoz nomida `&` yoki `<` bo'lsa
+    Telegram 400 qaytaradi va xabar jimgina chatterga tushib qoladi."""
+    return (matn or '').replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+
 # ------------------------------------------------------- 1. KECHAGI SOTUV
 ulgurji = env['sale.order'].search([
     ('state', '=', 'sale'),
@@ -89,7 +98,7 @@ for cfg in env['pos.config'].search([('company_id', '=', kompaniya.id)]):
     buyurtmalar = pos_buyurtma.filtered(lambda p: p.config_id == cfg)
     if buyurtmalar:
         dokon_qatorlari.append('     %s — %s %s (%s chek)' % (
-            cfg.name, pul(sum(buyurtmalar.mapped('amount_total'))),
+            esc(cfg.name), pul(sum(buyurtmalar.mapped('amount_total'))),
             valyuta, len(buyurtmalar)))
 
 # ------------------------------------------------------------- 2. KASSA
@@ -118,7 +127,7 @@ for ses in env['pos.session'].search([
     farq = (ses.cash_register_balance_end_real or 0.0) - (ses.cash_register_balance_end or 0.0)
     if abs(farq) > 0.01:
         farqli_smenalar.append('     %s — farq %s %s' % (
-            ses.config_id.name, pul(farq), valyuta))
+            esc(ses.config_id.name), pul(farq), valyuta))
 
 # ------------------------------------------- 3. MUDDATI O'TGAN QARZLAR
 kechikkan = env['account.move.line'].search([
@@ -133,7 +142,7 @@ qarz_summa = sum(kechikkan.mapped('amount_residual'))
 # eng katta 5 ta qarzdor
 qarz_kesim = {}
 for qator in kechikkan:
-    nom = qator.partner_id.display_name or '—'
+    nom = esc(qator.partner_id.display_name) or '—'
     qarz_kesim[nom] = qarz_kesim.get(nom, 0.0) + qator.amount_residual
 eng_kattalar = sorted(qarz_kesim.items(), key=lambda x: -x[1])[:5]
 
@@ -171,16 +180,19 @@ else:
 matn = '\n'.join(qatorlar)
 
 # --------------------------------------------------------- 5. YUBORISH
-chat_id = env['ir.config_parameter'].sudo().get_param('crafers.telegram_chat_id')
-
+# Transport: "Telegram Notification Center" (telegram_notification).
+# Uning manbasidan (models/telegram_mixin.py) aniqlangan API:
+#     env['telegram.notification.mixin']._telegram_send(message) -> bool
+# Token va chat ID ni o'zi oladi: Settings dagi tnc.telegram_bot_token /
+# tnc.telegram_chat_id / tnc.telegram_enabled. parse_mode = HTML.
+#
+# `_` bilan boshlanishi muammo emas: safe_eval faqat `__` li nomlarni
+# bloklaydi (odoo/tools/safe_eval.py:210). Appning o'z cron'lari ham
+# xuddi shunday `model._cron_notify_...()` ni chaqiradi.
 yuborildi = False
-if chat_id and 'telegram.message' in env:
-    # "Telegram Notification Center" o'rnatilgan bo'lsa
-    env['telegram.message'].sudo().create({
-        'chat_id': chat_id,
-        'message': matn,
-    })
-    yuborildi = True
+if 'telegram.notification.mixin' in env:
+    yuborildi = env['telegram.notification.mixin']._telegram_send(matn)
+    log('Telegram digest yuborildi: %s' % yuborildi, level='info')
 
 if not yuborildi:
     # Transport hali yo'q: matn jurnalga va kompaniya chatteriga tushadi,

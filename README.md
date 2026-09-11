@@ -2,9 +2,6 @@
 
 **Crafers** qandolat fabrikasi uchun Odoo 19 Enterprise custom modullari.
 
-Bu repoda faqat **kod bilan yechilgan** ikkita talab va bitta Studio skripti
-bor. Sozlash bilan yechilgan talablar (xarid, ishlab chiqarish, muddat/FEFO,
-POS, qaytarish, hisobotlar) kod talab qilmagani uchun bu yerda emas.
 
 ## Modullar
 
@@ -34,41 +31,20 @@ Batafsil: [crafers_ishbay_haq/README.md](crafers_ishbay_haq/README.md)
 
 ### `studio/telegram_kunlik_digest.py` — kunlik Telegram digest
 
-Modul emas: Odoo Studio ning **rejalashtirilgan amali** uchun kod. Har kuni
-ertalab egaga kechagi sotuv, kassa va muddati o'tgan qarzlarni yuboradi.
+Modul emas: Odoo **Scheduled Action** (`ir.cron`) ning *Python Code*
+maydoni uchun kod. Studio shart emas. Har kuni ertalab egaga kechagi sotuv,
+kassa va muddati o'tgan qarzlarni yuboradi.
 
-Studio yolg'iz yetmaydi — `safe_eval` da `requests` ham, `import` ham yo'q.
-Transport tayyor moduldan olinadi (Telegram Notification Center, LGPL-3).
+Server kodi `safe_eval` da ishlaydi — unda `requests` ham, `import` ham yo'q.
+Shuning uchun transport tayyor moduldan olinadi: **Telegram Notification
+Center** (`telegram_notification`, LGPL-3). Uning manbasidan aniqlangan API:
+
+```python
+env['telegram.notification.mixin']._telegram_send(message)  # -> bool
+```
+
+Token va chat ID appning Settings'idan olinadi. `_` bilan boshlanishi
+muammo emas: `safe_eval` faqat `__` li nomlarni bloklaydi.
+
 Fayl boshida to'liq o'rnatish yo'riqnomasi bor.
 
-## O'rnatish
-
-```bash
-git clone https://github.com/Expcod/crafers.git
-# addons_path ga shu papkani qo'shing, keyin:
-odoo -c <conf> -d <baza> -i crafers_kredit_limit,crafers_ishbay_haq --stop-after-init
-```
-
-Yoki Odoo interfeysida: Ilovalar → ro'yxatni yangilash → modul nomini qidiring.
-
-## Sinovlar
-
-```bash
-odoo -c <conf> -d <baza> \
-     -u crafers_kredit_limit,crafers_ishbay_haq \
-     --test-enable --stop-after-init
-```
-
-| Modul | Testlar | Natija |
-|---|---|---|
-| `crafers_kredit_limit` | 10 | `0 failed, 0 error(s)` |
-| `crafers_ishbay_haq` | 8 | `0 failed, 0 error(s)` |
-
-## Talab
-
-Odoo **19.0 Enterprise**. `crafers_ishbay_haq` Shop Floor ga tayanadi
-(`mrp_workorder`, `mrp_workorder_hr_account`).
-
-## Litsenziya
-
-LGPL-3

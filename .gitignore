@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/
+
+# Loglar
+*.log
+
+# --- REPODAN ATAYLAB TASHQARIDA ---
+# Bu papkalar lokalda qoladi va GitHub'ga chiqmaydi.
+# scripts/ ichida server API kaliti bor - hech qachon qo'shmang.
+scripts/
+docs/
+crafers_base/

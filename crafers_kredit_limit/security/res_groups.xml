@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Odoo 19 nuansi: res.groups da `category_id` YO'Q (privilege_id bilan
+         almashtirilgan). Standart modullar ham guruhni faqat `name` bilan
+         e'lon qiladi - sale/security/res_groups.xml ga qarang. -->
+    <record id="group_kredit_menejer" model="res.groups">
+        <field name="name">Kredit limitidan oshishni tasdiqlash</field>
+    </record>
+
+    <!-- Savdo administratori avtomat ravishda shu huquqni oladi -->
+    <record id="sales_team.group_sale_manager" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('crafers_kredit_limit.group_kredit_menejer'))]"/>
+    </record>
+
+</odoo>

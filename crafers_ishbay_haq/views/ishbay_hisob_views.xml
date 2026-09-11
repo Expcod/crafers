@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================ QATOR ============================ -->
+    <record id="view_ishbay_qator_list" model="ir.ui.view">
+        <field name="name">crafers.ishbay.qator.list</field>
+        <field name="model">crafers.ishbay.qator</field>
+        <field name="arch" type="xml">
+            <list string="Ishbay haq qatorlari" create="0" edit="0">
+                <field name="employee_id"/>
+                <field name="production_id" optional="show"/>
+                <field name="product_id" optional="show"/>
+                <field name="operation_id" optional="show"/>
+                <field name="workcenter_id" optional="hide"/>
+                <field name="wo_miqdor" optional="hide" sum="Buyurtma dona"/>
+                <field name="xodim_vaqti" optional="hide" sum="Vaqt (daq)"/>
+                <field name="ulush" optional="hide" widget="percentage" digits="[16,1]"/>
+                <field name="miqdor" sum="Jami dona"/>
+                <field name="ishbay_narx"/>
+                <field name="summa" sum="Jami summa"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_ishbay_qator_pivot" model="ir.ui.view">
+        <field name="name">crafers.ishbay.qator.pivot</field>
+        <field name="model">crafers.ishbay.qator</field>
+        <field name="arch" type="xml">
+            <pivot string="Ishbay haq tahlili">
+                <field name="employee_id" type="row"/>
+                <field name="product_id" type="col"/>
+                <field name="summa" type="measure"/>
+                <field name="miqdor" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_ishbay_qator_search" model="ir.ui.view">
+        <field name="name">crafers.ishbay.qator.search</field>
+        <field name="model">crafers.ishbay.qator</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="employee_id"/>
+                <field name="product_id"/>
+                <field name="production_id"/>
+                <group>
+                    <filter name="group_employee" string="Xodim" domain="[]"
+                            context="{'group_by': 'employee_id'}"/>
+                    <filter name="group_product" string="Mahsulot" domain="[]"
+                            context="{'group_by': 'product_id'}"/>
+                    <filter name="group_operation" string="Operatsiya" domain="[]"
+                            context="{'group_by': 'operation_id'}"/>
+                    <filter name="group_davr" string="Davr oxiri" domain="[]"
+                            context="{'group_by': 'sana_oxiri'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================ HISOB ============================ -->
+    <record id="view_ishbay_hisob_form" model="ir.ui.view">
+        <field name="name">crafers.ishbay.hisob.form</field>
+        <field name="model">crafers.ishbay.hisob</field>
+        <field name="arch" type="xml">
+            <form string="Ishbay haq hisobi">
+                <header>
+                    <button name="action_hisoblash" string="Hisoblash"
+                            type="object" class="btn-primary"
+                            invisible="state == 'tasdiqlangan'"/>
+                    <button name="action_tasdiqlash" string="To'lovga tasdiqlash"
+                            type="object" class="btn-primary"
+                            invisible="state != 'hisoblangan'"/>
+                    <button name="action_qoralamaga" string="Qoralamaga"
+                            type="object"
+                            invisible="state == 'qoralama'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="qoralama,hisoblangan,tasdiqlangan"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_qatorlarni_korish" type="object"
+                                class="oe_stat_button" icon="fa-list">
+                            <field name="xodim_soni" widget="statinfo" string="Xodim"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <div class="alert alert-warning" role="alert"
+                         invisible="not ogohlantirish">
+                        <field name="ogohlantirish" readonly="1" nolabel="1"/>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="sana_boshi" readonly="state == 'tasdiqlangan'"/>
+                            <field name="sana_oxiri" readonly="state == 'tasdiqlangan'"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="jami_miqdor"/>
+                            <field name="jami_summa"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Xodimlar bo'yicha" name="qatorlar">
+                            <field name="qator_ids" readonly="1">
+                                <list create="0" edit="0">
+                                    <field name="employee_id"/>
+                                    <field name="production_id"/>
+                                    <field name="product_id"/>
+                                    <field name="operation_id"/>
+                                    <field name="xodim_vaqti" sum="Vaqt"/>
+                                    <field name="ulush" widget="percentage" digits="[16,1]"/>
+                                    <field name="miqdor" sum="Dona"/>
+                                    <field name="ishbay_narx"/>
+                                    <field name="summa" sum="Summa"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_ishbay_hisob_list" model="ir.ui.view">
+        <field name="name">crafers.ishbay.hisob.list</field>
+        <field name="model">crafers.ishbay.hisob</field>
+        <field name="arch" type="xml">
+            <list string="Ishbay haq hisoblari">
+                <field name="name"/>
+                <field name="sana_boshi"/>
+                <field name="sana_oxiri"/>
+                <field name="xodim_soni"/>
+                <field name="jami_miqdor" sum="Dona"/>
+                <field name="jami_summa" sum="Summa"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'tasdiqlangan'"
+                       decoration-info="state == 'hisoblangan'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================ AMALLAR =========================== -->
+    <record id="action_ishbay_hisob" model="ir.actions.act_window">
+        <field name="name">Ishbay haq</field>
+        <field name="res_model">crafers.ishbay.hisob</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Birinchi ishbay hisobini yarating</p>
+            <p>Davrni tanlang va «Hisoblash» tugmasini bosing. Hisob Shop Floor da
+               yozilgan xodim vaqtidan foydalanadi, shuning uchun ishchilar ish
+               buyrug'ini o'z nomidan boshlab-to'xtatgan bo'lishi kerak.</p>
+        </field>
+    </record>
+
+    <record id="action_ishbay_qator" model="ir.actions.act_window">
+        <field name="name">Ishbay haq tahlili</field>
+        <field name="res_model">crafers.ishbay.qator</field>
+        <field name="view_mode">pivot,list</field>
+        <field name="context">{'search_default_group_employee': 1}</field>
+    </record>
+
+    <menuitem id="menu_ishbay_hisob" name="Ishbay haq"
+              parent="mrp.menu_mrp_root" action="action_ishbay_hisob"
+              groups="mrp.group_mrp_user" sequence="70"/>
+    <menuitem id="menu_ishbay_qator" name="Ishbay haq tahlili"
+              parent="mrp.menu_mrp_reporting" action="action_ishbay_qator"
+              groups="mrp.group_mrp_user" sequence="70"/>
+
+</odoo>

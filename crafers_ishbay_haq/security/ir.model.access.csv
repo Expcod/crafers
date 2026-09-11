@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ishbay_hisob_user,ishbay.hisob.user,model_crafers_ishbay_hisob,mrp.group_mrp_user,1,0,0,0
+access_ishbay_hisob_manager,ishbay.hisob.manager,model_crafers_ishbay_hisob,mrp.group_mrp_manager,1,1,1,1
+access_ishbay_hisob_hr,ishbay.hisob.hr,model_crafers_ishbay_hisob,hr.group_hr_manager,1,1,1,1
+access_ishbay_qator_user,ishbay.qator.user,model_crafers_ishbay_qator,mrp.group_mrp_user,1,0,0,0
+access_ishbay_qator_manager,ishbay.qator.manager,model_crafers_ishbay_qator,mrp.group_mrp_manager,1,1,1,1
+access_ishbay_qator_hr,ishbay.qator.hr,model_crafers_ishbay_qator,hr.group_hr_manager,1,1,1,1

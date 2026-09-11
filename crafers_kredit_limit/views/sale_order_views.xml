@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_order_form_kredit_limit" model="ir.ui.view">
+        <field name="name">sale.order.form.kredit.limit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Menejer tugmalari sarlavhaning boshida -->
+            <xpath expr="//header" position="inside">
+                <button name="action_kredit_tasdiqlash"
+                        string="Kreditni tasdiqlash"
+                        type="object"
+                        class="btn-primary"
+                        groups="crafers_kredit_limit.group_kredit_menejer"
+                        invisible="kredit_holat != 'kutilmoqda'"
+                        confirm="Bu buyurtma mijozning kredit limitidan oshadi. Tasdiqlaysizmi?"/>
+                <button name="action_kredit_rad_etish"
+                        string="Rad etish"
+                        type="object"
+                        groups="crafers_kredit_limit.group_kredit_menejer"
+                        invisible="kredit_holat != 'kutilmoqda'"/>
+                <button name="action_kredit_qayta_sorash"
+                        string="Kreditni qayta so'rash"
+                        type="object"
+                        groups="crafers_kredit_limit.group_kredit_menejer"
+                        invisible="kredit_holat not in ('rad_etilgan', 'tasdiqlangan') or state not in ('draft', 'sent')"/>
+            </xpath>
+
+            <!-- Standart sariq ogohlantirish yonida - qizil blok -->
+            <xpath expr="//field[@name='partner_credit_warning']/.." position="after">
+                <div class="alert alert-danger" role="alert"
+                     invisible="not kredit_limitdan_oshdi or kredit_holat == 'tasdiqlangan' or state not in ('draft', 'sent')">
+                    <strong>Kredit limitidan oshadi — buyurtma tasdiqlanmaydi.</strong>
+                    <div class="mt-2">
+                        Limit: <field name="kredit_limit" class="oe_inline"/> ·
+                        joriy qarz: <field name="kredit_joriy_qarz" class="oe_inline"/> ·
+                        shu buyurtma: <field name="kredit_buyurtma_summasi" class="oe_inline"/>
+                        <br/>
+                        Tasdiqlangandan keyin: <field name="kredit_yangi_qoldiq" class="oe_inline"/>,
+                        <strong>limitdan oshadi: <field name="kredit_oshgan_summa" class="oe_inline"/></strong>
+                    </div>
+                </div>
+                <div class="alert alert-info" role="alert"
+                     invisible="kredit_holat != 'kutilmoqda'">
+                    Buyurtma <strong>menejer tasdig'ini kutmoqda</strong>. Savdo menejeri
+                    yuqoridagi tugma orqali tasdiqlaydi yoki rad etadi.
+                </div>
+                <div class="alert alert-success" role="alert"
+                     invisible="kredit_holat != 'tasdiqlangan'">
+                    Kredit limitidan oshish tasdiqlangan —
+                    <field name="kredit_tasdiqlagan_id" class="oe_inline"/>,
+                    <field name="kredit_tasdiq_sana" class="oe_inline"/>
+                </div>
+                <div class="alert alert-danger" role="alert"
+                     invisible="kredit_holat != 'rad_etilgan'">
+                    Menejer <strong>rad etdi</strong> —
+                    <field name="kredit_tasdiqlagan_id" class="oe_inline"/>.
+                    <field name="kredit_izoh" class="oe_inline" readonly="1"/>
+                </div>
+            </xpath>
+
+            <!-- Menejer izohi va texnik maydonlar -->
+            <xpath expr="//field[@name='payment_term_id']" position="after">
+                <field name="kredit_holat" invisible="kredit_holat == 'yoq'"/>
+                <field name="kredit_izoh"
+                       placeholder="Rad etish sababi yoki tasdiqlash sharti..."
+                       groups="crafers_kredit_limit.group_kredit_menejer"
+                       invisible="kredit_holat == 'yoq'"/>
+                <field name="kredit_limitdan_oshdi" invisible="1"/>
+                <field name="company_currency_id" invisible="1"/>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- Ro'yxatda tasdiq kutayotganlarni ajratib ko'rsatish -->
+    <record id="view_order_tree_kredit_limit" model="ir.ui.view">
+        <field name="name">sale.order.list.kredit.limit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="decoration-danger">kredit_holat == 'kutilmoqda'</attribute>
+            </xpath>
+            <xpath expr="//field[@name='state']" position="before">
+                <field name="kredit_holat" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Menejer uchun filtr: tasdiq kutayotgan buyurtmalar -->
+    <record id="view_sales_order_filter_kredit" model="ir.ui.view">
+        <field name="name">sale.order.search.kredit.limit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.sale_order_view_search_inherit_quotation"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <filter name="kredit_kutilmoqda"
+                        string="Kredit tasdig'i kutilmoqda"
+                        domain="[('kredit_holat', '=', 'kutilmoqda')]"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

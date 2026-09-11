@@ -189,9 +189,23 @@ matn = '\n'.join(qatorlar)
 # `_` bilan boshlanishi muammo emas: safe_eval faqat `__` li nomlarni
 # bloklaydi (odoo/tools/safe_eval.py:210). Appning o'z cron'lari ham
 # xuddi shunday `model._cron_notify_...()` ni chaqiradi.
+#
+# Appning O'Z hodisa xabarlari (SO/PO tasdiqlandi, faktura to'landi, lead
+# biriktirildi, cron ogohlantirishlari) o'chirilgan: Settings dagi
+# "Enable Telegram Notifications" (tnc.telegram_enabled) o'chiq. Lekin
+# _telegram_send aynan shu bayroqni tekshiradi. Shuning uchun digest uni
+# FAQAT o'z tranzaksiyasi ichida vaqtincha yoqadi va darhol qaytaradi: commit
+# paytida qiymat o'zgarmagan bo'ladi, boshqa jarayonlar "yoqiq" holatni
+# ko'rmaydi. _telegram_send barcha xatolarni o'zi ushlaydi (False qaytaradi),
+# shuning uchun try/finally shart emas; boshqa xato bo'lsa butun tranzaksiya
+# rollback bo'ladi va bayroq baribir o'zgarmay qoladi.
 yuborildi = False
 if 'telegram.notification.mixin' in env:
+    icp = env['ir.config_parameter'].sudo()
+    oldingi = icp.get_param('tnc.telegram_enabled')
+    icp.set_param('tnc.telegram_enabled', 'True')
     yuborildi = env['telegram.notification.mixin']._telegram_send(matn)
+    icp.set_param('tnc.telegram_enabled', oldingi or False)
     log('Telegram digest yuborildi: %s' % yuborildi, level='info')
 
 if not yuborildi:
